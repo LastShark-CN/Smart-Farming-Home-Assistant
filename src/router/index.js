@@ -89,6 +89,15 @@ const routes = [
       requireAuth: true,
       roles: ['super_admin', 'farmer']
     }
+  },
+  {
+    path: '/farmer/plant-records',
+    name: 'plantRecords',
+    component: () => import('../views/PlantRecord.vue'),
+    meta: {
+      requireAuth: true,
+      roles: ['farmer']
+    }
   }
 ]
 

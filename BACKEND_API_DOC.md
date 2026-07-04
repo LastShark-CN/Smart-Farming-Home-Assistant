@@ -556,6 +556,247 @@ Authorization: Bearer <token>
 
 ---
 
+### 7. 种植记录模块
+
+#### 7.1 创建种植记录
+
+- **路径**: `POST /api/plant-records`
+- **描述**: 农场主创建新的种植记录
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+```
+
+- **请求体**:
+
+```json
+{
+  "cropId": "number, 必填, 作物ID",
+  "cropName": "string, 作物名称",
+  "recordDate": "string, 必填, 记录日期, 格式: YYYY-MM-DD",
+  "content": "string, 必填, Markdown格式的种植记录内容",
+  "images": "array[string], 可选, 图片URL数组"
+}
+```
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "创建成功",
+  "data": {
+    "id": "number, 记录ID",
+    "cropId": "number, 作物ID",
+    "cropName": "string, 作物名称",
+    "recordDate": "string, 记录日期",
+    "content": "string, 记录内容",
+    "images": "array[string], 图片URL数组",
+    "createTime": "string, 创建时间"
+  }
+}
+```
+
+#### 7.2 获取种植记录列表
+
+- **路径**: `GET /api/plant-records`
+- **描述**: 获取农场主的种植记录列表，支持按作物和日期筛选
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+```
+
+- **请求参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| page | number | 否 | 页码，默认1 |
+| size | number | 否 | 每页数量，默认10 |
+| cropId | number | 否 | 按作物ID筛选 |
+| recordDate | string | 否 | 按日期筛选，格式: YYYY-MM-DD |
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "list": [
+      {
+        "id": "number, 记录ID",
+        "cropId": "number, 作物ID",
+        "cropName": "string, 作物名称",
+        "recordDate": "string, 记录日期",
+        "content": "string, 记录内容预览",
+        "images": "array[string], 图片URL数组",
+        "createTime": "string, 创建时间"
+      }
+    ],
+    "total": "number, 总记录数",
+    "page": "number, 当前页码",
+    "size": "number, 每页数量"
+  }
+}
+```
+
+#### 7.3 获取种植记录详情
+
+- **路径**: `GET /api/plant-records/:id`
+- **描述**: 获取单条种植记录的详细信息
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+```
+
+- **路径参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | number | 是 | 记录ID |
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": "number, 记录ID",
+    "cropId": "number, 作物ID",
+    "cropName": "string, 作物名称",
+    "recordDate": "string, 记录日期",
+    "content": "string, Markdown格式的完整记录内容",
+    "images": "array[string], 图片URL数组",
+    "createTime": "string, 创建时间",
+    "updateTime": "string, 更新时间"
+  }
+}
+```
+
+#### 7.4 更新种植记录
+
+- **路径**: `PUT /api/plant-records/:id`
+- **描述**: 更新种植记录
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+```
+
+- **路径参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | number | 是 | 记录ID |
+
+- **请求体**:
+
+```json
+{
+  "cropId": "number, 作物ID",
+  "cropName": "string, 作物名称",
+  "recordDate": "string, 记录日期",
+  "content": "string, Markdown格式的记录内容",
+  "images": "array[string], 图片URL数组"
+}
+```
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "更新成功",
+  "data": null
+}
+```
+
+#### 7.5 删除种植记录
+
+- **路径**: `DELETE /api/plant-records/:id`
+- **描述**: 删除种植记录
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+```
+
+- **路径参数**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| id | number | 是 | 记录ID |
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+#### 7.6 获取作物选项
+
+- **路径**: `GET /api/crops/options`
+- **描述**: 获取所有作物列表，用于下拉选择
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+```
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": "number, 作物ID",
+      "name": "string, 作物名称"
+    }
+  ]
+}
+```
+
+#### 7.7 图片上传
+
+- **路径**: `POST /api/upload/image`
+- **描述**: 上传图片文件
+- **请求头**:
+
+```
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+
+- **请求体**:
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 图片文件 |
+
+- **成功响应** (code: 200):
+
+```json
+{
+  "code": 200,
+  "message": "上传成功",
+  "data": {
+    "url": "string, 图片访问URL"
+  }
+}
+```
+
+---
+
 ## 错误码说明
 
 | 错误码 | 说明 |
@@ -620,5 +861,21 @@ Authorization: Bearer <token>
   "year": 2024,
   "month": 6,
   "createTime": "2024-06-01 00:00:00"
+}
+```
+
+### 种植记录数据模型
+
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "cropId": 1,
+  "cropName": "小麦",
+  "recordDate": "2024-01-15",
+  "content": "# 小麦种植记录\n\n## 今日情况\n\n今天天气晴朗，气温15°C，湿度60%。",
+  "images": ["https://example.com/images/wheat1.jpg"],
+  "createTime": "2024-01-15 10:30:00",
+  "updateTime": "2024-01-15 10:30:00"
 }
 ```

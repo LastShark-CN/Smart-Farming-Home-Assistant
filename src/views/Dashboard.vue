@@ -374,6 +374,7 @@ const farmerMenus = [
   { name: '我的农场', path: '/farmer/my-farm', icon: '🌾' },
   { name: '设备管理', path: '/farmer/devices', icon: '📡' },
   { name: '农作物管理', path: '/farmer/crops', icon: '🌱' },
+  { name: '种植记录', path: '/farmer/plant-records', icon: '📝' },
   { name: 'AI助手', path: '/ai-chat', icon: '🤖' },
   { name: '个人信息', path: '/profile', icon: '👤' }
 ]

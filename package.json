@@ -20,6 +20,7 @@
     "axios": "^1.18.1",
     "echarts": "^6.1.0",
     "element-plus": "^2.14.2",
+    "md-editor-v3": "^4.25.3",
     "pinia": "^3.0.4",
     "three": "^0.185.1",
     "tsparticles": "^4.3.1",
