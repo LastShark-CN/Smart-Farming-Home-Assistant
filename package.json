@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/<USERNAME>/<REPO>.git"
+    "url": "https://github.com/LastShark-CN/Smart-Farming-Home-Assistant.git"
   },
   "type": "module",
   "scripts": {
