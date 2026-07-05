@@ -1,41 +1,176 @@
 # Smart Farming Home Assistant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Vue 3](https://img.shields.io/badge/Vue-3.x-brightgreen.svg)](https://vuejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-8.x-purple.svg)](https://vitejs.dev/)
+[![Element Plus](https://img.shields.io/badge/Element%20Plus-2.x-blue.svg)](https://element-plus.org/)
 
-这是一个基于 Vue 3 + Vite 的智能农业管理前端项目模板，包含仪表盘、设备管理、作物管理和 AI 聊天等功能。
+基于 Vue 3 + Vite 的智能农业管理前端项目，提供完整的农场管理、环境监测、AI助手等功能。
+
+## 功能特性
+
+### 🌾 农场管理
+- 我的农场 - 查看农场基本信息
+- 设备管理 - 管理农业设备和传感器
+- 作物管理 - 管理各类农作物信息
+
+### 📊 数据监测
+- 环境监测仪表盘 - 实时显示温度、湿度、CO2、土壤pH值
+- 统计图表 - 产量趋势、种植面积分布、24小时环境变化
+- 数据可视化 - ECharts图表展示
+
+### 📝 种植记录
+- 每日种植记录 - Markdown格式编写
+- 作物照片上传 - 支持多图上传
+- 分类筛选 - 按作物/日期筛选记录
+
+### 🤖 AI助手
+- AI聊天 - 智能农业问答
+- Live2D模型 - 可爱的虚拟助手形象
+- 表情互动 - 根据AI回复自动切换表情
+
+### 👥 用户管理
+- 用户认证 - JWT Token登录
+- 角色权限 - 超级管理员/农场主
+- 个人信息 - 编辑个人资料和农场地址
+
+### 🎨 视觉效果
+- 粒子背景动画
+- 3D场景展示
+- 玻璃态UI设计
+- 响应式布局
+
+## 技术栈
+
+| 类别 | 技术 | 版本 |
+|------|------|------|
+| 框架 | Vue | 3.x |
+| 构建工具 | Vite | 8.x |
+| 组件库 | Element Plus | 2.x |
+| 路由 | Vue Router | 5.x |
+| 状态管理 | Pinia | 3.x |
+| HTTP客户端 | Axios | 1.x |
+| 图表库 | ECharts | 6.x |
+| Markdown编辑器 | md-editor-v3 | 4.x |
+| Live2D | vue-live2d | 1.x |
+| 3D渲染 | Three.js | 0.x |
+| 粒子效果 | tsparticles | 4.x |
 
 ## 快速开始
 
-安装依赖并启动开发服务器：
+### 安装依赖
 
-```
+```bash
 npm install
+```
+
+### 启动开发服务器
+
+```bash
 npm run dev
 ```
 
-## 开源到 GitHub
+### 构建生产版本
 
-下面命令会在本地初始化 Git、提交所有文件并创建 `main` 分支。请将 `<OWNER>` 和 `<REPO>` 替换为你的 GitHub 用户名和仓库名。
-
-如果你已经在 GitHub 上创建了仓库（例如：`https://github.com/<OWNER>/<REPO>`），运行：
-
-```
-git init
-git add .
-git commit -m "chore: prepare repository for open source"
-git branch -M main
-git remote add origin https://github.com/<OWNER>/<REPO>.git
-git push -u origin main
+```bash
+npm run build
 ```
 
-如果你已安装 `gh`（GitHub CLI）并登录，可以直接创建远程仓库：
+### 预览生产版本
+
+```bash
+npm run preview
+```
+
+## 项目结构
 
 ```
-gh repo create <OWNER>/<REPO> --public --source=. --remote=origin --push
+src/
+├── api/                    # API接口模块
+│   ├── chat.js             # AI聊天接口
+│   ├── farmData.js         # 农场数据接口
+│   └── plantRecord.js      # 种植记录接口
+├── assets/                 # 静态资源
+│   ├── hero.png
+│   ├── vite.svg
+│   └── vue.svg
+├── components/             # 公共组件
+│   ├── ParticleBackground.vue  # 粒子背景
+│   └── ThreeScene.vue          # 3D场景
+├── mock/                   # 模拟数据
+│   └── farmData.js         # 农场模拟数据
+├── router/                 # 路由配置
+│   └── index.js
+├── stores/                 # Pinia状态管理
+│   └── user.js             # 用户状态
+├── utils/                  # 工具函数
+│   └── request.js          # Axios封装
+├── views/                  # 页面组件
+│   ├── admin/              # 管理员页面
+│   │   ├── Settings.vue
+│   │   └── UserManagement.vue
+│   ├── farmer/             # 农场主页面
+│   │   ├── CropManagement.vue
+│   │   ├── DeviceManagement.vue
+│   │   └── MyFarm.vue
+│   ├── AIChat.vue          # AI聊天页面
+│   ├── Dashboard.vue       # 仪表盘页面
+│   ├── HomePage.vue        # 首页
+│   ├── LoginRegister.vue   # 登录注册页
+│   ├── PlantRecord.vue     # 种植记录页面
+│   └── Profile.vue         # 个人信息页面
+├── App.vue
+├── main.js
+└── style.css
 ```
 
-完成后请在 GitHub 仓库设置中确认 license、README 等信息。若需要，我可以代为运行创建和推送命令（需你确认并确保本机已登录 GitHub）。
+## 路由配置
+
+| 路径 | 名称 | 权限 | 说明 |
+|------|------|------|------|
+| `/` | home | 公开 | 首页 |
+| `/login` | login | 公开 | 登录/注册 |
+| `/dashboard` | dashboard | 登录用户 | 仪表盘 |
+| `/profile` | profile | 登录用户 | 个人信息 |
+| `/ai-chat` | aiChat | 登录用户 | AI助手 |
+| `/farmer/my-farm` | myFarm | 农场主 | 我的农场 |
+| `/farmer/devices` | devices | 农场主 | 设备管理 |
+| `/farmer/crops` | crops | 农场主 | 作物管理 |
+| `/farmer/plant-records` | plantRecords | 农场主 | 种植记录 |
+| `/admin/users` | adminUsers | 超级管理员 | 用户管理 |
+| `/admin/settings` | adminSettings | 超级管理员 | 系统设置 |
+
+## API文档
+
+后端API接口文档请查看 [BACKEND_API_DOC.md](BACKEND_API_DOC.md)
+
+## 开发说明
+
+### 环境变量
+
+创建 `.env.development` 文件配置开发环境：
+
+```env
+VITE_APP_BASE_API=http://localhost:3000
+```
+
+### 认证机制
+
+项目使用JWT Token认证，Token存储在localStorage中，通过Axios请求拦截器自动添加到请求头。
+
+```
+Authorization: Bearer <token>
+```
+
+### 状态管理
+
+使用Pinia管理全局状态，主要store包括：
+- `user` - 用户信息、登录状态、权限管理
 
 ## 许可证
 
-本项目采用 MIT 许可证，详见 `LICENSE` 文件。
+本项目采用 MIT 许可证，详见 [LICENSE](LICENSE) 文件。
+
+## 贡献
+
+欢迎提交Issue和Pull Request！
