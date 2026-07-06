@@ -1,13 +1,161 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/user'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import ParticleBackground from '../../components/ParticleBackground.vue'
 import ThreeScene from '../../components/ThreeScene.vue'
+import { getDevicePage, getDeviceTypeList, createDevice, updateDevice, deleteDevice } from '../../api/device'
+import { turnOnDevice, turnOffDevice, toggleDevice } from '../../api/deviceControl'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+const devices = ref([])
+const deviceTypes = ref([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(12)
+const keyword = ref('')
+const loading = ref(false)
+const showDialog = ref(false)
+const editMode = ref(false)
+const currentId = ref(null)
+
+const form = ref({
+  name: '',
+  code: '',
+  status: 0,
+  location: '',
+  deviceTypeId: '',
+  description: ''
+})
+
+const onlineCount = computed(() => devices.value.filter(d => d.status === 1).length)
+const offlineCount = computed(() => devices.value.filter(d => d.status === 0).length)
+
+onMounted(async () => {
+  await loadDeviceTypes()
+  await loadDevices()
+})
+
+async function loadDeviceTypes() {
+  try {
+    const response = await getDeviceTypeList()
+    deviceTypes.value = response.data || []
+  } catch (error) {
+    deviceTypes.value = []
+  }
+}
+
+async function loadDevices() {
+  loading.value = true
+  try {
+    const response = await getDevicePage({
+      page: currentPage.value,
+      size: pageSize.value,
+      keyword: keyword.value || undefined
+    })
+    devices.value = response.data.list || []
+    total.value = response.data.total || 0
+  } catch (error) {
+    ElMessage.error('加载设备列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleSearch() {
+  currentPage.value = 1
+  loadDevices()
+}
+
+function openAddDialog() {
+  editMode.value = false
+  currentId.value = null
+  form.value = { name: '', code: '', status: 0, location: '', deviceTypeId: '', description: '' }
+  showDialog.value = true
+}
+
+function openEditDialog(device) {
+  editMode.value = true
+  currentId.value = device.id
+  form.value = {
+    name: device.name,
+    code: device.code,
+    status: device.status,
+    location: device.location || '',
+    deviceTypeId: device.deviceTypeId || '',
+    description: device.description || ''
+  }
+  showDialog.value = true
+}
+
+async function handleSubmit() {
+  try {
+    if (editMode.value) {
+      await updateDevice(currentId.value, form.value)
+      ElMessage.success('更新成功')
+    } else {
+      await createDevice(form.value)
+      ElMessage.success('创建成功')
+    }
+    showDialog.value = false
+    loadDevices()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+async function handleDelete(id) {
+  try {
+    await ElMessageBox.confirm('确定要删除该设备吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await deleteDevice(id)
+    ElMessage.success('删除成功')
+    loadDevices()
+  } catch (error) {
+    if (error !== 'cancel') ElMessage.error('删除失败')
+  }
+}
+
+async function handleTurnOn(deviceId) {
+  try {
+    await turnOnDevice(deviceId)
+    ElMessage.success('设备已开启')
+    loadDevices()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+async function handleTurnOff(deviceId) {
+  try {
+    await turnOffDevice(deviceId)
+    ElMessage.success('设备已关闭')
+    loadDevices()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+async function handleToggle(deviceId) {
+  try {
+    await toggleDevice(deviceId)
+    ElMessage.success('设备状态已切换')
+    loadDevices()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+function getTypeName(typeId) {
+  const type = deviceTypes.value.find(t => t.id === typeId)
+  return type ? type.name : '未知'
+}
 
 function handleLogout() {
   userStore.logout()
@@ -18,15 +166,6 @@ function handleLogout() {
 function goBack() {
   router.push('/dashboard')
 }
-
-const devices = ref([
-  { id: 'D001', name: '温湿度传感器', type: 'sensor', status: 'online', lastUpdate: '2分钟前', data: { temp: 25.6, humidity: 68 } },
-  { id: 'D002', name: '土壤湿度传感器', type: 'sensor', status: 'online', lastUpdate: '5分钟前', data: { soilMoisture: 72 } },
-  { id: 'D003', name: '智能灌溉控制器', type: 'controller', status: 'online', lastUpdate: '10分钟前', data: { status: '自动模式' } },
-  { id: 'D004', name: '光照传感器', type: 'sensor', status: 'offline', lastUpdate: '2小时前', data: { light: 450 } },
-  { id: 'D005', name: 'CO2传感器', type: 'sensor', status: 'online', lastUpdate: '3分钟前', data: { co2: 420 } },
-  { id: 'D006', name: '智能通风系统', type: 'controller', status: 'online', lastUpdate: '8分钟前', data: { status: '运行中' } }
-])
 </script>
 
 <template>
@@ -45,12 +184,8 @@ const devices = ref([
           <span>智慧农业</span>
         </div>
         <div class="nav-links">
-          <button class="menu-btn" @click="goBack">
-            返回首页
-          </button>
-          <button class="logout-btn" @click="handleLogout">
-            退出登录
-          </button>
+          <button class="menu-btn" @click="goBack">返回首页</button>
+          <button class="logout-btn" @click="handleLogout">退出登录</button>
         </div>
       </div>
     </nav>
@@ -63,70 +198,124 @@ const devices = ref([
 
       <div class="stats-row">
         <div class="stat-box">
-          <span class="stat-num online">{{ devices.filter(d => d.status === 'online').length }}</span>
+          <span class="stat-num online">{{ onlineCount }}</span>
           <span class="stat-label">在线设备</span>
         </div>
         <div class="stat-box">
-          <span class="stat-num offline">{{ devices.filter(d => d.status === 'offline').length }}</span>
+          <span class="stat-num offline">{{ offlineCount }}</span>
           <span class="stat-label">离线设备</span>
         </div>
         <div class="stat-box">
-          <span class="stat-num total">{{ devices.length }}</span>
+          <span class="stat-num total">{{ total }}</span>
           <span class="stat-label">设备总数</span>
         </div>
       </div>
 
+      <div class="toolbar">
+        <el-input
+          v-model="keyword"
+          placeholder="搜索设备名称/编号"
+          class="search-input"
+          clearable
+          @keyup.enter="handleSearch"
+        />
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button type="success" @click="openAddDialog">添加设备</el-button>
+      </div>
+
       <section class="devices-section">
-        <h2>设备列表</h2>
-        <div class="devices-grid">
+        <div v-if="loading" class="loading-state">加载中...</div>
+        <div v-else class="devices-grid">
           <div v-for="device in devices" :key="device.id" class="device-card">
             <div class="device-header">
               <div class="device-info">
-                <span class="device-id">{{ device.id }}</span>
+                <span class="device-id">{{ device.code }}</span>
                 <h3 class="device-name">{{ device.name }}</h3>
+                <span class="device-type">{{ getTypeName(device.deviceTypeId) }}</span>
               </div>
-              <span :class="['status-indicator', device.status]">
-                {{ device.status === 'online' ? '在线' : '离线' }}
+              <span :class="['status-indicator', device.status === 1 ? 'online' : 'offline']">
+                {{ device.status === 1 ? '在线' : '离线' }}
               </span>
             </div>
-            <div class="device-data">
-              <div v-if="device.type === 'sensor'" class="data-grid">
-                <div v-if="device.data.temp" class="data-item">
-                  <span class="data-label">温度</span>
-                  <span class="data-value">{{ device.data.temp }}°C</span>
-                </div>
-                <div v-if="device.data.humidity" class="data-item">
-                  <span class="data-label">湿度</span>
-                  <span class="data-value">{{ device.data.humidity }}%</span>
-                </div>
-                <div v-if="device.data.soilMoisture" class="data-item">
-                  <span class="data-label">土壤湿度</span>
-                  <span class="data-value">{{ device.data.soilMoisture }}%</span>
-                </div>
-                <div v-if="device.data.light" class="data-item">
-                  <span class="data-label">光照</span>
-                  <span class="data-value">{{ device.data.light }} lux</span>
-                </div>
-                <div v-if="device.data.co2" class="data-item">
-                  <span class="data-label">CO2</span>
-                  <span class="data-value">{{ device.data.co2 }} ppm</span>
-                </div>
-              </div>
-              <div v-else class="data-grid">
-                <div class="data-item">
-                  <span class="data-label">状态</span>
-                  <span class="data-value">{{ device.data.status }}</span>
-                </div>
-              </div>
+            <div class="device-body">
+              <div class="device-location">📍 {{ device.location || '未设置位置' }}</div>
             </div>
             <div class="device-footer">
-              <span class="last-update">最后更新: {{ device.lastUpdate }}</span>
-              <button class="control-btn">查看详情</button>
+              <div class="control-buttons">
+                <el-button
+                  size="small"
+                  type="success"
+                  :disabled="device.status === 1"
+                  @click="handleTurnOn(device.id)"
+                >开启</el-button>
+                <el-button
+                  size="small"
+                  type="warning"
+                  :disabled="device.status === 0"
+                  @click="handleTurnOff(device.id)"
+                >关闭</el-button>
+                <el-button
+                  size="small"
+                  type="info"
+                  @click="handleToggle(device.id)"
+                >切换</el-button>
+              </div>
+              <div class="action-buttons">
+                <el-button size="small" type="primary" @click="openEditDialog(device)">编辑</el-button>
+                <el-button size="small" type="danger" @click="handleDelete(device.id)">删除</el-button>
+              </div>
             </div>
           </div>
         </div>
+
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="total"
+            :page-sizes="[12, 24, 48]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @current-change="loadDevices"
+            @size-change="loadDevices"
+          />
+        </div>
       </section>
     </main>
+
+    <el-dialog
+      v-model="showDialog"
+      :title="editMode ? '编辑设备' : '添加设备'"
+      width="600px"
+    >
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="设备名称">
+          <el-input v-model="form.name" placeholder="请输入设备名称" />
+        </el-form-item>
+        <el-form-item label="设备编号">
+          <el-input v-model="form.code" placeholder="请输入设备编号" />
+        </el-form-item>
+        <el-form-item label="设备类型">
+          <el-select v-model="form.deviceTypeId" placeholder="请选择设备类型" style="width: 100%">
+            <el-option
+              v-for="type in deviceTypes"
+              :key="type.id"
+              :label="type.name"
+              :value="type.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="安装位置">
+          <el-input v-model="form.location" placeholder="请输入安装位置" />
+        </el-form-item>
+        <el-form-item label="设备描述">
+          <el-input type="textarea" v-model="form.description" placeholder="请输入设备描述" :rows="3" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -146,7 +335,6 @@ const devices = ref([
   padding: 16px 24px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -218,7 +406,7 @@ const devices = ref([
 }
 
 .header {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .header h1 {
@@ -236,14 +424,13 @@ const devices = ref([
 .stats-row {
   display: flex;
   gap: 20px;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .stat-box {
   flex: 1;
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 20px;
@@ -256,40 +443,45 @@ const devices = ref([
   display: block;
 }
 
-.stat-num.online {
-  color: #48bb78;
-}
-
-.stat-num.offline {
-  color: #ff6b6b;
-}
-
-.stat-num.total {
-  color: #aa3bff;
-}
+.stat-num.online { color: #48bb78; }
+.stat-num.offline { color: #ff6b6b; }
+.stat-num.total { color: #aa3bff; }
 
 .stat-label {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
 }
 
-.devices-section h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-  margin: 0 0 20px;
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-input {
+  width: 260px;
+}
+
+.devices-section {
+  margin-top: 20px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .devices-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
 }
 
 .device-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 20px;
@@ -299,7 +491,7 @@ const devices = ref([
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .device-info {
@@ -320,6 +512,11 @@ const devices = ref([
   margin: 0;
 }
 
+.device-type {
+  font-size: 12px;
+  color: rgba(170, 59, 255, 0.8);
+}
+
 .status-indicator {
   padding: 4px 12px;
   border-radius: 20px;
@@ -337,33 +534,13 @@ const devices = ref([
   color: #ff6b6b;
 }
 
-.device-data {
-  margin-bottom: 16px;
+.device-body {
+  margin-bottom: 12px;
 }
 
-.data-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.data-item {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 10px;
-}
-
-.data-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  display: block;
-  margin-bottom: 4px;
-}
-
-.data-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
+.device-location {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .device-footer {
@@ -372,25 +549,55 @@ const devices = ref([
   align-items: center;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.last-update {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+.control-buttons,
+.action-buttons {
+  display: flex;
+  gap: 6px;
 }
 
-.control-btn {
-  padding: 6px 14px;
-  background: rgba(170, 59, 255, 0.2);
-  border: 1px solid rgba(170, 59, 255, 0.4);
-  border-radius: 6px;
-  color: #aa3bff;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.pagination-wrapper {
+  padding: 16px 0;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.control-btn:hover {
-  background: rgba(170, 59, 255, 0.3);
+:deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+:deep(.el-input__inner) {
+  color: white;
+}
+
+:deep(.el-dialog) {
+  background: rgba(20, 20, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.el-dialog__title) {
+  color: white;
+}
+
+:deep(.el-form-item__label) {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 768px) {
+  .stats-row {
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    min-width: 100px;
+  }
+
+  .devices-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

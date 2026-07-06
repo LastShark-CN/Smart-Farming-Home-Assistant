@@ -153,10 +153,10 @@ const goBack = () => {
 }
 
 onMounted(() => {
-  getChatHistory()
+  getChatHistory({ page: 1, size: 50 })
     .then(response => {
       if (response.data) {
-        messages.value = response.data
+        messages.value = response.data.list || response.data
       }
     })
     .catch(() => {

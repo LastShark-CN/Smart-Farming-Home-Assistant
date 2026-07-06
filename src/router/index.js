@@ -98,6 +98,14 @@ const routes = [
       requireAuth: true,
       roles: ['farmer']
     }
+  },
+  {
+    path: '/easter-egg',
+    name: 'easterEgg',
+    component: () => import('../views/EasterEgg.vue'),
+    meta: {
+      requireAuth: false
+    }
   }
 ]
 

@@ -1,13 +1,52 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/user'
 import { ElMessage } from 'element-plus'
 import ParticleBackground from '../../components/ParticleBackground.vue'
 import ThreeScene from '../../components/ThreeScene.vue'
+import { getCompanyInfo } from '../../api/home'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+const farmInfo = ref({
+  name: '加载中...',
+  area: '--',
+  location: '加载中...',
+  crops: [],
+  workers: 0
+})
+
+const cropList = ref([
+  { name: '水稻', status: '生长中', progress: 65 },
+  { name: '西红柿', status: '成熟期', progress: 90 },
+  { name: '草莓', status: '种植期', progress: 30 },
+  { name: '黄瓜', status: '收获期', progress: 95 }
+])
+
+onMounted(async () => {
+  try {
+    const response = await getCompanyInfo()
+    if (response.data) {
+      farmInfo.value = {
+        name: response.data.name || '阳光农场',
+        area: response.data.area || '--',
+        location: response.data.address || '浙江省杭州市余杭区',
+        crops: [],
+        workers: response.data.workers || 0
+      }
+    }
+  } catch (error) {
+    farmInfo.value = {
+      name: '阳光农场',
+      area: '50亩',
+      location: '浙江省杭州市余杭区',
+      crops: ['水稻', '蔬菜', '水果'],
+      workers: 8
+    }
+  }
+})
 
 function handleLogout() {
   userStore.logout()
@@ -18,21 +57,6 @@ function handleLogout() {
 function goBack() {
   router.push('/dashboard')
 }
-
-const farmInfo = ref({
-  name: '阳光农场',
-  area: '50亩',
-  location: '浙江省杭州市余杭区',
-  crops: ['水稻', '蔬菜', '水果'],
-  workers: 8
-})
-
-const cropList = ref([
-  { name: '水稻', status: '生长中', progress: 65 },
-  { name: '西红柿', status: '成熟期', progress: 90 },
-  { name: '草莓', status: '种植期', progress: 30 },
-  { name: '黄瓜', status: '收获期', progress: 95 }
-])
 </script>
 
 <template>
@@ -51,12 +75,8 @@ const cropList = ref([
           <span>智慧农业</span>
         </div>
         <div class="nav-links">
-          <button class="menu-btn" @click="goBack">
-            返回首页
-          </button>
-          <button class="logout-btn" @click="handleLogout">
-            退出登录
-          </button>
+          <button class="menu-btn" @click="goBack">返回首页</button>
+          <button class="logout-btn" @click="handleLogout">退出登录</button>
         </div>
       </div>
     </nav>
@@ -127,7 +147,6 @@ const cropList = ref([
   padding: 16px 24px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -217,7 +236,6 @@ const cropList = ref([
 .farm-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 24px;
@@ -281,7 +299,6 @@ const cropList = ref([
 .crop-card {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 20px;

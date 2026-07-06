@@ -1,5 +1,34 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterView, useRouter } from 'vue-router'
+import { onMounted, onUnmounted } from 'vue'
+
+const router = useRouter()
+const konamiCode = [
+  'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+  'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+  'KeyB', 'KeyA'
+]
+let konamiIndex = 0
+
+function handleKeydown(e) {
+  if (e.code === konamiCode[konamiIndex]) {
+    konamiIndex++
+    if (konamiIndex === konamiCode.length) {
+      konamiIndex = 0
+      router.push('/easter-egg')
+    }
+  } else {
+    konamiIndex = 0
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <template>

@@ -1,20 +1,124 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/user'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import ParticleBackground from '../../components/ParticleBackground.vue'
 import ThreeScene from '../../components/ThreeScene.vue'
+import { getAdminUsers, createAdminUser, updateAdminUser, deleteAdminUser, updateAdminUserStatus } from '../../api/admin'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const users = ref([
-  { id: 1, username: '超级管理员', email: 'admin@example.com', role: 'super_admin', status: 'active' },
-  { id: 2, username: '张农场主', email: 'farmer1@example.com', role: 'farmer', status: 'active' },
-  { id: 3, username: '李农场主', email: 'farmer2@example.com', role: 'farmer', status: 'active' },
-  { id: 4, username: '王农场主', email: 'farmer3@example.com', role: 'farmer', status: 'inactive' }
-])
+const users = ref([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const keyword = ref('')
+const loading = ref(false)
+const showDialog = ref(false)
+const editMode = ref(false)
+const currentId = ref(null)
+
+const form = ref({
+  username: '',
+  email: '',
+  password: '',
+  phone: ''
+})
+
+const statusOptions = [
+  { label: '启用', value: 'active' },
+  { label: '禁用', value: 'inactive' }
+]
+
+onMounted(() => {
+  loadUsers()
+})
+
+async function loadUsers() {
+  loading.value = true
+  try {
+    const response = await getAdminUsers({
+      page: currentPage.value,
+      size: pageSize.value,
+      keyword: keyword.value || undefined
+    })
+    users.value = response.data.list || []
+    total.value = response.data.total || 0
+  } catch (error) {
+    ElMessage.error('加载用户列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleSearch() {
+  currentPage.value = 1
+  loadUsers()
+}
+
+function openAddDialog() {
+  editMode.value = false
+  currentId.value = null
+  form.value = { username: '', email: '', password: '', phone: '' }
+  showDialog.value = true
+}
+
+function openEditDialog(user) {
+  editMode.value = true
+  currentId.value = user.id
+  form.value = {
+    username: user.username,
+    email: user.email,
+    phone: user.phone || '',
+    password: ''
+  }
+  showDialog.value = true
+}
+
+async function handleSubmit() {
+  try {
+    if (editMode.value) {
+      const data = { username: form.value.username, email: form.value.email, phone: form.value.phone }
+      if (form.value.password) data.password = form.value.password
+      await updateAdminUser(currentId.value, data)
+      ElMessage.success('更新成功')
+    } else {
+      await createAdminUser(form.value)
+      ElMessage.success('创建成功')
+    }
+    showDialog.value = false
+    loadUsers()
+  } catch (error) {
+    ElMessage.error('操作失败')
+  }
+}
+
+async function handleDelete(id) {
+  try {
+    await ElMessageBox.confirm('确定要删除该用户吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await deleteAdminUser(id)
+    ElMessage.success('删除成功')
+    loadUsers()
+  } catch (error) {
+    if (error !== 'cancel') ElMessage.error('删除失败')
+  }
+}
+
+async function handleStatusChange(id, status) {
+  try {
+    await updateAdminUserStatus(id, status)
+    ElMessage.success('状态更新成功')
+    loadUsers()
+  } catch (error) {
+    ElMessage.error('状态更新失败')
+  }
+}
 
 function handleLogout() {
   userStore.logout()
@@ -43,12 +147,8 @@ function goBack() {
           <span>智慧农业</span>
         </div>
         <div class="nav-links">
-          <button class="menu-btn" @click="goBack">
-            返回首页
-          </button>
-          <button class="logout-btn" @click="handleLogout">
-            退出登录
-          </button>
+          <button class="menu-btn" @click="goBack">返回首页</button>
+          <button class="logout-btn" @click="handleLogout">退出登录</button>
         </div>
       </div>
     </nav>
@@ -59,42 +159,94 @@ function goBack() {
         <p>管理系统中的所有用户</p>
       </header>
 
+      <div class="toolbar">
+        <el-input
+          v-model="keyword"
+          placeholder="搜索用户名/邮箱"
+          class="search-input"
+          clearable
+          @keyup.enter="handleSearch"
+        />
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button type="success" @click="openAddDialog">添加用户</el-button>
+      </div>
+
       <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>用户名</th>
-              <th>邮箱</th>
-              <th>角色</th>
-              <th>状态</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in users" :key="user.id">
-              <td>{{ user.id }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
-              <td>
-                <span :class="['role-badge', user.role]">
-                  {{ user.role === 'super_admin' ? '超级管理员' : '农场主' }}
-                </span>
-              </td>
-              <td>
-                <span :class="['status-badge', user.status]">
-                  {{ user.status === 'active' ? '活跃' : '禁用' }}
-                </span>
-              </td>
-              <td>
-                <button class="action-btn edit">编辑</button>
-                <button class="action-btn delete">删除</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <el-table :data="users" v-loading="loading" stripe border class="data-table">
+          <el-table-column prop="id" label="ID" width="80" />
+          <el-table-column prop="username" label="用户名" min-width="120" />
+          <el-table-column prop="email" label="邮箱" min-width="180" />
+          <el-table-column prop="role" label="角色" width="120">
+            <template #default="{ row }">
+              <el-tag :type="row.role === 'super_admin' ? 'danger' : 'success'" size="small">
+                {{ row.role === 'super_admin' ? '超级管理员' : row.role === 'admin' ? '管理员' : '农场主' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="100">
+            <template #default="{ row }">
+              <el-switch
+                :model-value="row.status === 'active'"
+                :disabled="row.id === userStore.userInfo?.id"
+                @change="(val) => handleStatusChange(row.id, val ? 'active' : 'inactive')"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="160" fixed="right">
+            <template #default="{ row }">
+              <el-button size="small" type="primary" @click="openEditDialog(row)">编辑</el-button>
+              <el-button
+                size="small"
+                type="danger"
+                :disabled="row.id === userStore.userInfo?.id"
+                @click="handleDelete(row.id)"
+              >删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div class="pagination-wrapper">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="total"
+            :page-sizes="[10, 20, 50]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @current-change="loadUsers"
+            @size-change="loadUsers"
+          />
+        </div>
       </div>
     </main>
+
+    <el-dialog
+      v-model="showDialog"
+      :title="editMode ? '编辑用户' : '添加用户'"
+      width="500px"
+    >
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="用户名">
+          <el-input v-model="form.username" placeholder="请输入用户名" />
+        </el-form-item>
+        <el-form-item label="邮箱">
+          <el-input v-model="form.email" placeholder="请输入邮箱" />
+        </el-form-item>
+        <el-form-item label="手机号">
+          <el-input v-model="form.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input
+            v-model="form.password"
+            type="password"
+            :placeholder="editMode ? '留空则不修改' : '请输入密码'"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -114,7 +266,6 @@ function goBack() {
   padding: 16px 24px;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -186,7 +337,7 @@ function goBack() {
 }
 
 .header {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .header h1 {
@@ -201,10 +352,20 @@ function goBack() {
   margin-top: 8px;
 }
 
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-input {
+  width: 260px;
+}
+
 .table-container {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   overflow: hidden;
@@ -212,92 +373,50 @@ function goBack() {
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
 }
 
-.data-table th,
-.data-table td {
-  padding: 16px 20px;
-  text-align: left;
+.pagination-wrapper {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.data-table th {
-  background: rgba(0, 0, 0, 0.2);
+:deep(.el-table__header th) {
   color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-  font-size: 14px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.data-table tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+:deep(.el-table__body td) {
   color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  transition: background 0.3s ease;
 }
 
-.data-table tbody tr:hover {
+:deep(.el-table) {
+  background: transparent;
+}
+
+:deep(.el-table__body tr:hover) {
+  background: rgba(170, 59, 255, 0.1);
+}
+
+:deep(.el-input__wrapper) {
   background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
-.role-badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+:deep(.el-input__inner) {
+  color: white;
 }
 
-.role-badge.super_admin {
-  background: rgba(170, 59, 255, 0.2);
-  color: #aa3bff;
+:deep(.el-dialog) {
+  background: rgba(20, 20, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.role-badge.farmer {
-  background: rgba(78, 205, 196, 0.2);
-  color: #4ecdc4;
+:deep(.el-dialog__title) {
+  color: white;
 }
 
-.status-badge {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status-badge.active {
-  background: rgba(72, 187, 120, 0.2);
-  color: #48bb78;
-}
-
-.status-badge.inactive {
-  background: rgba(255, 107, 107, 0.2);
-  color: #ff6b6b;
-}
-
-.action-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-right: 8px;
-}
-
-.action-btn.edit {
-  background: rgba(170, 59, 255, 0.2);
-  color: #aa3bff;
-}
-
-.action-btn.edit:hover {
-  background: rgba(170, 59, 255, 0.3);
-}
-
-.action-btn.delete {
-  background: rgba(255, 107, 107, 0.2);
-  color: #ff6b6b;
-}
-
-.action-btn.delete:hover {
-  background: rgba(255, 107, 107, 0.3);
+:deep(.el-form-item__label) {
+  color: rgba(255, 255, 255, 0.8);
 }
 </style>

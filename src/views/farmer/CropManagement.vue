@@ -4,6 +4,7 @@ import { useUserStore } from '../../stores/user';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import ParticleBackground from '../../components/ParticleBackground.vue';
 import ThreeScene from '../../components/ThreeScene.vue';
+import { getCropOptions } from '../../api/plantRecord';
 const router = useRouter();
 const userStore = useUserStore();
 const cropList = ref([]);
@@ -28,6 +29,21 @@ onMounted(() => {
  loadCropList();
 });
 async function loadCropList() {
+ try {
+   const response = await getCropOptions()
+   if (response.data && Array.isArray(response.data)) {
+     cropList.value = response.data.map(crop => ({
+       id: crop.value,
+       name: crop.label,
+       category: crop.label,
+       info: '',
+       remark: ''
+     }))
+     return
+   }
+ } catch (error) {
+   // fallback to mock data
+ }
  const mockData = [
  {
  id: 1,

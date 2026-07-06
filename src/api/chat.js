@@ -2,22 +2,23 @@ import request from '../utils/request'
 
 export function sendMessage(data) {
   return request({
-    url: '/api/chat/send',
+    url: '/chat/send',
     method: 'post',
     data
   })
 }
 
-export function getChatHistory() {
+export function getChatHistory(params) {
   return request({
-    url: '/api/chat/history',
-    method: 'get'
+    url: '/chat/history',
+    method: 'get',
+    params
   })
 }
 
 export function clearChatHistory() {
   return request({
-    url: '/api/chat/clear',
-    method: 'post'
+    url: '/chat/clear',
+    method: 'delete'
   })
 }

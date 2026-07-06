@@ -2,28 +2,28 @@ import request from '../utils/request'
 
 export function getEnvironmentData() {
   return request({
-    url: '/api/monitor/environment',
+    url: '/monitor/environment',
     method: 'get'
   })
 }
 
 export function getCropProductionData() {
   return request({
-    url: '/api/statistics/production',
+    url: '/statistics/yield',
     method: 'get'
   })
 }
 
 export function getPlantingAreaData() {
   return request({
-    url: '/api/statistics/area',
+    url: '/statistics/area',
     method: 'get'
   })
 }
 
 export function getEnvironmentHistory(params) {
   return request({
-    url: '/api/monitor/history',
+    url: '/monitor/history',
     method: 'get',
     params
   })

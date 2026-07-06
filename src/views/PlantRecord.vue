@@ -2,10 +2,10 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, ElButton, ElForm, ElFormItem, ElInput, ElDatePicker, ElSelect, ElOption, ElUpload, ElDialog, ElTable, ElTableColumn, ElTag, ElPagination, ElImage } from 'element-plus'
-import { Plus, Edit, Delete, Eye, Calendar, Leaf, Filter, Upload, X, Check, Back } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, View, Calendar, Filter, Upload, Close, Check, Back } from '@element-plus/icons-vue'
 import { createPlantRecord, getPlantRecords, getPlantRecord, updatePlantRecord, deletePlantRecord, getCropOptions } from '../api/plantRecord'
 import { MdEditor, MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/dist/style.css'
+import 'md-editor-v3/lib/style.css'
 
 const router = useRouter()
 
@@ -347,7 +347,7 @@ const mockRecords = [
           <ElTableColumn label="操作" width="180" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
-                <ElButton size="small" @click="openDetailDialog(row)" :icon="Eye">
+                <ElButton size="small" @click="openDetailDialog(row)" :icon="View">
                   查看
                 </ElButton>
                 <ElButton size="small" type="primary" @click="openEditDialog(row)" :icon="Edit">
@@ -416,7 +416,7 @@ const mockRecords = [
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="showFormDialog = false" :icon="X">取消</ElButton>
+        <ElButton @click="showFormDialog = false" :icon="Close">取消</ElButton>
         <ElButton type="primary" @click="handleSubmit" :icon="Check">确定</ElButton>
       </template>
     </ElDialog>

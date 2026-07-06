@@ -2,7 +2,7 @@ import request from '../utils/request'
 
 export function createPlantRecord(data) {
   return request({
-    url: '/api/plant-records',
+    url: '/plant',
     method: 'post',
     data
   })
@@ -10,7 +10,7 @@ export function createPlantRecord(data) {
 
 export function getPlantRecords(params) {
   return request({
-    url: '/api/plant-records',
+    url: '/plant/list',
     method: 'get',
     params
   })
@@ -18,14 +18,14 @@ export function getPlantRecords(params) {
 
 export function getPlantRecord(id) {
   return request({
-    url: `/api/plant-records/${id}`,
+    url: `/plant/${id}`,
     method: 'get'
   })
 }
 
 export function updatePlantRecord(id, data) {
   return request({
-    url: `/api/plant-records/${id}`,
+    url: `/plant/${id}`,
     method: 'put',
     data
   })
@@ -33,14 +33,14 @@ export function updatePlantRecord(id, data) {
 
 export function deletePlantRecord(id) {
   return request({
-    url: `/api/plant-records/${id}`,
+    url: `/plant/${id}`,
     method: 'delete'
   })
 }
 
 export function getCropOptions() {
   return request({
-    url: '/api/crops/options',
+    url: '/crop/options',
     method: 'get'
   })
 }

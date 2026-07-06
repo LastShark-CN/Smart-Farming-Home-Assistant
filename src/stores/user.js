@@ -59,6 +59,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function updateProfile(profileData) {
+    const response = await request.put('/user/profile', profileData)
+    if (response.data) {
+      setUserInfo(response.data)
+    }
+    return response
+  }
+
   function logout() {
     token.value = ''
     userInfo.value = null
@@ -78,6 +86,7 @@ export const useUserStore = defineStore('user', () => {
     login,
     register,
     getUserInfo,
+    updateProfile,
     logout
   }
 })

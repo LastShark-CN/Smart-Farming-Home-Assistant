@@ -4,6 +4,7 @@ import { useUserStore } from '../stores/user';
 import { ElMessage } from 'element-plus';
 import ParticleBackground from '../components/ParticleBackground.vue';
 import ThreeScene from '../components/ThreeScene.vue';
+import { updateUserProfile } from '../api/user';
 const router = useRouter();
 const userStore = useUserStore();
 const isEditing = ref(false);
@@ -41,19 +42,25 @@ onMounted(() => {
  loadUserInfo();
 });
 async function loadUserInfo() {
- const mockData = {
- username: userStore.username || '张农场主',
- avatar: '',
- phone: '138****8888',
- email: userStore.email || 'farmer@example.com',
- farmProvince: '浙江省',
- farmCity: '杭州市',
- farmDistrict: '余杭区',
- farmAddress: '阳光大道888号',
- homeAddress: '杭州市西湖区文三路123号',
- personalInfo: '从事农业生产15年，专注于智慧农业技术应用，目前经营50亩有机农场。'
- };
- Object.assign(form, mockData);
+ const userInfo = userStore.userInfo
+ if (userInfo) {
+   Object.assign(form, {
+     username: userInfo.username || '',
+     avatar: userInfo.avatar || '',
+     phone: userInfo.phone || '',
+     email: userInfo.email || '',
+     farmProvince: userInfo.farmProvince || '',
+     farmCity: userInfo.farmCity || '',
+     farmDistrict: userInfo.farmDistrict || '',
+     farmAddress: userInfo.farmAddress || '',
+     homeAddress: userInfo.homeAddress || '',
+     personalInfo: userInfo.personalInfo || ''
+   })
+ } else {
+   await userStore.getUserInfo()
+   loadUserInfo()
+   return
+ }
  updateCities();
  updateDistricts();
 }
@@ -73,8 +80,20 @@ function startEdit() {
 }
 async function saveEdit() {
  try {
- ElMessage.success('信息修改成功');
- isEditing.value = false;
+   const response = await updateUserProfile({
+     email: form.email,
+     phone: form.phone,
+     avatar: form.avatar,
+     farmProvince: form.farmProvince,
+     farmCity: form.farmCity,
+     farmDistrict: form.farmDistrict,
+     farmAddress: form.farmAddress,
+     homeAddress: form.homeAddress,
+     personalInfo: form.personalInfo
+   })
+   ElMessage.success(response.message || '信息修改成功');
+   isEditing.value = false;
+   userStore.getUserInfo()
  }
  catch (error) {
  ElMessage.error('修改失败');
