@@ -7,6 +7,28 @@
 
 基于 Vue 3 + Vite 的智能农业管理前端项目，提供完整的农场管理、环境监测、AI助手等功能。
 
+## 版本选择
+
+本项目提供两个版本分支，您可以根据需求选择：
+
+| 分支 | 说明 | 特性 |
+|------|------|------|
+| `main` | 🎯 **彩蛋版本（推荐）** | 包含丰富的彩蛋内容和隐藏功能 |
+| `no-easter-egg` | 🧹 **纯净版本** | 无任何彩蛋，仅保留核心功能 |
+
+### 选择版本
+
+```bash
+# 使用彩蛋版本（默认）
+git clone https://github.com/LastShark-CN/Smart-Farming-Home-Assistant.git
+
+# 使用纯净版本
+git clone -b no-easter-egg https://github.com/LastShark-CN/Smart-Farming-Home-Assistant.git
+
+# 或在本地切换分支
+git checkout no-easter-egg
+```
+
 ## 功能特性
 
 ### 🌾 农场管理
@@ -39,6 +61,19 @@
 - 3D场景展示
 - 玻璃态UI设计
 - 响应式布局
+
+### 🎁 彩蛋内容（仅彩蛋版本）
+
+> 💡 彩蛋版本包含大量隐藏的交互彩蛋和视觉特效，为您的使用体验增添乐趣！
+
+| 彩蛋类型 | 说明 |
+|----------|------|
+| 🎭 特殊动画 | 特定操作触发的独特动画效果 |
+| 🖼️ 隐藏页面 | 神秘的彩蛋页面，包含独特的视觉展示 |
+| 🎨 特效渲染 | 自定义字体、特殊图像渲染效果 |
+| ⚡ 交互惊喜 | 意想不到的交互反馈和视觉效果 |
+
+**提示**：尝试探索不同的页面和操作，说不定会发现惊喜哦！
 
 ## 技术栈
 
@@ -115,6 +150,7 @@ src/
 │   │   └── MyFarm.vue
 │   ├── AIChat.vue          # AI聊天页面
 │   ├── Dashboard.vue       # 仪表盘页面
+│   ├── EasterEgg.vue       # 彩蛋页面（仅彩蛋版本）
 │   ├── HomePage.vue        # 首页
 │   ├── LoginRegister.vue   # 登录注册页
 │   ├── PlantRecord.vue     # 种植记录页面
@@ -139,6 +175,7 @@ src/
 | `/farmer/plant-records` | plantRecords | 农场主 | 种植记录 |
 | `/admin/users` | adminUsers | 超级管理员 | 用户管理 |
 | `/admin/settings` | adminSettings | 超级管理员 | 系统设置 |
+| `/easter-egg` | easterEgg | 公开 | 彩蛋页面（仅彩蛋版本） |
 
 ## API文档
 
