@@ -1,6 +1,7 @@
 <script setup>
 import { RouterView, useRouter } from 'vue-router'
 import { onMounted, onUnmounted } from 'vue'
+import WatchingEyes from './components/WatchingEyes.vue'
 
 const router = useRouter()
 const konamiCode = [
@@ -32,6 +33,7 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <WatchingEyes />
   <RouterView />
 </template>
 
